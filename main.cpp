@@ -2,29 +2,27 @@
 #include <vector>
 using namespace std;
 
-bool IsPalindrom(const string& str) {
-    int pos_start = 0, pos_end = str.length() - 1;
-    auto res = true;
-    while ((pos_start < pos_end) && res) {
-        res &= str[pos_start++] == str[pos_end--];
+void MoveStrings(vector<string>& source, vector<string>& destination) {
+    for (auto s: source) {
+        destination.push_back(s);
     }
-    return res;
+    source.clear();
 }
 
-vector<string> PalindromFilter(const vector<string>& words, int minLength) {
-    vector<string> res;
-    for (auto word: words) {
-        if (IsPalindrom(word) && word.length() >= minLength) {
-            res.push_back(word);
-        }
-    }
-    return res;
+bool test_1() {
+    vector<string> source = {"a", "b", "c"};
+    vector<string> destination = {"z"};
+    MoveStrings(source, destination);
+    return source.size() == 0 && destination[0] == "z" && destination[1] == "a" && destination[2] == "b" && destination[3] == "c";
 }
 
 int main()
 {
-    string str;
-    cin >> str;
-    cout << IsPalindrom(str);
+    if (!test_1()) {
+        cout << "FAIL!";
+        return -1;
+    }
+
+    cout << "OK!";
     return 0;
 }
