@@ -2,18 +2,30 @@
 #include <vector>
 using namespace std;
 
-void MoveStrings(vector<string>& source, vector<string>& destination) {
-    for (auto s: source) {
-        destination.push_back(s);
+void Reverse(vector<int>& numbers) {
+    int start_pos = 0, end_pos = numbers.size() - 1;
+    while (start_pos < end_pos) {
+        auto tmp = numbers[start_pos];
+        numbers[start_pos] = numbers[end_pos];
+        numbers[end_pos] = tmp;
+        start_pos += 1;
+        end_pos -= 1;
     }
-    source.clear();
+}
+
+bool vectors_equal(const vector<int>& a, const vector<int>& b) {
+    if (a.size() != b.size()) return false;
+    for (int i = 0; i < a.size(); i++) {
+        if (a[i] != b[i]) return false;
+    }
+    return true;
 }
 
 bool test_1() {
-    vector<string> source = {"a", "b", "c"};
-    vector<string> destination = {"z"};
-    MoveStrings(source, destination);
-    return source.size() == 0 && destination[0] == "z" && destination[1] == "a" && destination[2] == "b" && destination[3] == "c";
+    vector<int> numbers = {1, 5, 3, 4, 2};
+    vector<int> rev_numbers = {2, 4, 3, 5, 1};
+    Reverse(numbers);
+    return vectors_equal(numbers, rev_numbers);
 }
 
 int main()
