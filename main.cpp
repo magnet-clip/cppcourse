@@ -2,25 +2,19 @@
 #include <vector>
 using namespace std;
 
+bool IsPalindrom(const string& str) {
+    int pos_start = 0, pos_end = str.length() - 1;
+    auto res = true;
+    while ((pos_start < pos_end) && res) {
+        res &= str[pos_start++] == str[pos_end--];
+    }
+    return res;
+}
+
 int main()
 {
-    unsigned int num;
-    cin >> num;
-
-    vector<int> converted;
-    unsigned int div, mod;
-    do {
-        div = num / 2;
-        mod = num % 2;
-        //cout << "Div: " << div << "; mod: " << mod << "\r\n";
-        converted.push_back(mod);
-
-        num = div;
-    } while (div != 0); 
-
-    for (auto it = converted.rbegin(); it != converted.rend(); it++) {
-        cout << *it;
-    }
-
+    string str;
+    cin >> str;
+    cout << IsPalindrom(str);
     return 0;
 }
