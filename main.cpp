@@ -2,15 +2,12 @@
 #include <vector>
 using namespace std;
 
-void Reverse(vector<int>& numbers) {
-    int start_pos = 0, end_pos = numbers.size() - 1;
-    while (start_pos < end_pos) {
-        auto tmp = numbers[start_pos];
-        numbers[start_pos] = numbers[end_pos];
-        numbers[end_pos] = tmp;
-        start_pos += 1;
-        end_pos -= 1;
+vector<int> Reversed(const vector<int>& numbers) {
+    vector<int> res;
+    for (auto it = numbers.rbegin(); it != numbers.rend(); it++) {
+        res.push_back(*it);
     }
+    return res;
 }
 
 bool vectors_equal(const vector<int>& a, const vector<int>& b) {
@@ -24,8 +21,7 @@ bool vectors_equal(const vector<int>& a, const vector<int>& b) {
 bool test_1() {
     vector<int> numbers = {1, 5, 3, 4, 2};
     vector<int> rev_numbers = {2, 4, 3, 5, 1};
-    Reverse(numbers);
-    return vectors_equal(numbers, rev_numbers);
+    return vectors_equal(Reversed(numbers), rev_numbers);
 }
 
 int main()
