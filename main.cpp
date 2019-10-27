@@ -11,6 +11,16 @@ bool IsPalindrom(const string& str) {
     return res;
 }
 
+vector<string> PalindromFilter(const vector<string>& words, int minLength) {
+    vector<string> res;
+    for (auto word: words) {
+        if (IsPalindrom(word) && word.length() >= minLength) {
+            res.push_back(word);
+        }
+    }
+    return res;
+}
+
 int main()
 {
     string str;
