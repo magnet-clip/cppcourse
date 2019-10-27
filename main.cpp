@@ -1,30 +1,37 @@
 #include <iostream>
 using namespace std;
 
+inline int min(int a, int b)
+{
+    return a < b ? a : b;
+}
 
-int main() {
-    int s;
-    cin >> s;
+inline int max(int a, int b)
+{
+    return a < b ? b : a;
+}
 
-    auto single_f = false;
-    auto double_f = false;
+int main()
+{
+    unsigned int n1, n2;
+    cin >> n1 >> n2;
 
-    auto res = -2;
+    unsigned int smallest = min(n1, n2);
+    unsigned int largest = max(n1, n2);
 
-    for (auto i = 0; i < s.length(); i++) {
-        if (s[i] == 'f') {
-            if (double_f) { // f occurred twice
-                // do nothing, everything's done
-            } else if (single_f) { // one f already found 
-                double_f = true;
-                res = i;
-            } else { // it's the first f we found here
-                single_f = true;
-                res = -1;
-            }
-        }
+    if (smallest == 0 || smallest == 1)
+    {
+        cout << 1;
+        return 0;
     }
 
-    cout << res;
-    return 0; 
+    while (smallest != 0)
+    {
+        unsigned int m = largest % smallest;
+        // cout << "Remainder of " << largest << " and " << smallest << " is " << m << "\n";
+        largest = smallest;
+        smallest = m;
+    }
+    cout << largest;
+    return 0;
 }
