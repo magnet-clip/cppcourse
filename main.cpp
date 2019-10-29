@@ -46,10 +46,10 @@ auto todo(const vector<string> &actions)
     {
         if (starts_with(command, "DUMP"))
         {
-            auto date = get_ending_integer(command);
+            auto date = get_ending_integer(command) - 1;
             // cout << "DUMP " << date << endl;
             string str;
-            str.append(tasks[date].size() + " ");
+            str.append(to_string(tasks[date].size()) + " ");
             for (auto record : tasks[date])
             {
                 str.append(record + " ");
@@ -66,7 +66,7 @@ auto todo(const vector<string> &actions)
             {
                 auto &new_last_day_of_month = tasks[count_days[current_month] - 1];
 
-                for (auto i = count_days[last_month] - 1; i > count_days[current_month]; i++)
+                for (auto i = count_days[last_month] - 1; i > count_days[current_month]; i--)
                 {
                     auto last_day_tasks = tasks.back();
                     new_last_day_of_month.insert(new_last_day_of_month.end(), last_day_tasks.begin(), last_day_tasks.end());
@@ -80,7 +80,7 @@ auto todo(const vector<string> &actions)
         }
         else if (starts_with(command, "ADD"))
         {
-            auto date = get_middle_integer(command);
+            auto date = get_middle_integer(command) - 1;
             auto name = get_ending_string(command);
 
             // cout << "ADD " << date << " " << name << endl;
