@@ -3,7 +3,7 @@
 
 using namespace std;
 
-//#define TEST
+#define TEST
 
 bool starts_with(const string &who, const string &what)
 {
@@ -44,6 +44,7 @@ auto todo(const vector<string> &actions)
 
     for (auto command : actions)
     {
+        // cout << command << endl;
         if (starts_with(command, "DUMP"))
         {
             auto date = get_ending_integer(command) - 1;
@@ -75,7 +76,7 @@ auto todo(const vector<string> &actions)
             }
             else if (count_days[current_month] > count_days[last_month])
             {
-                tasks.insert(tasks.end(), vector<string>());
+                tasks.insert(tasks.end(), count_days[current_month] - count_days[last_month] + 1, vector<string>());
             }
         }
         else if (starts_with(command, "ADD"))
@@ -96,24 +97,92 @@ template <typename T>
 bool vectors_equal(const vector<T> &v1, const vector<T> &v2)
 {
     if (v1.size() != v2.size())
+    {
+        cout << "Sizes are different" << endl;
         return false;
+    }
     for (int i = 0; i < v1.size(); i++)
     {
         if (v1[i] != v2[i])
+        {
+            cout << v1[i] << " <> " << v2[i] << endl;
             return false;
+        }
     }
     return true;
 }
 
 bool test_1()
 {
-    vector<string> commands{"COME 5", "WORRY 1", "WORRY 4", "COME -2", "WORRY_COUNT", "COME 3", "WORRY 3", "WORRY_COUNT"};
-    auto res = worried_queue(commands);
-    vector<int> expected{1, 2};
-    for (auto item : res)
-    {
-        cout << item << endl;
-    }
+
+    vector<string>
+        commands{
+            "ADD 5 Salary",
+            "ADD 31 Walk",
+            "ADD 30 WalkPreparations",
+            "NEXT",
+            "DUMP 5 ",
+            "DUMP 28 ",
+            "NEXT",
+            "DUMP 31",
+            "DUMP 30 ",
+            "DUMP 28 ",
+            "ADD 28 Payment",
+            "DUMP 28",
+        };
+    auto res = todo(commands);
+    vector<string> expected{
+        "1 Salary ",
+        "2 Walk WalkPreparations ",
+        "0 ",
+        "0 ",
+        "2 Walk WalkPreparations ",
+        "3 Walk WalkPreparations Payment "};
+    return vectors_equal(res, expected);
+}
+
+bool test_2()
+{
+
+    vector<string>
+        commands{
+            "ADD 31 Jan",
+            "NEXT",
+            "ADD 28 Feb",
+            "NEXT",
+            "ADD 31 Mar",
+            "NEXT",
+            "ADD 30 Apr",
+            "NEXT",
+            "ADD 31 May",
+            "NEXT",
+            "ADD 30 Jun",
+            "NEXT",
+            "ADD 31 Jul",
+            "NEXT",
+            "ADD 31 Aug",
+            "NEXT",
+            "ADD 30 Sep",
+            "NEXT",
+            "ADD 31 Oct",
+            "NEXT",
+            "ADD 30 Nov",
+            "NEXT",
+            "ADD 31 Dec",
+            "NEXT",
+            "ADD 31 Jan",
+            "DUMP 28",
+            "DUMP 30",
+            "DUMP 31",
+        };
+    auto res = todo(commands);
+    vector<string> expected{
+        "1 Feb ",
+        "2 Walk WalkPreparations ",
+        "0 ",
+        "0 ",
+        "2 Walk WalkPreparations ",
+        "3 Walk WalkPreparations Payment "};
     return vectors_equal(res, expected);
 }
 #else
