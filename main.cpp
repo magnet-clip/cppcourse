@@ -3,7 +3,7 @@
 
 using namespace std;
 
-#define TEST
+//#define TEST
 
 bool starts_with(const string &who, const string &what)
 {
@@ -61,22 +61,26 @@ auto todo(const vector<string> &actions)
         {
             auto last_month = current_month;
             current_month = (current_month + 1) % 12;
-            // cout << "NEXT " << current_month << endl;
+            // cout << "NEXT " << last_month << " / " << current_month << endl;
 
-            if (count_days[current_month] < count_days[last_month])
+            auto current_days = count_days[current_month];
+            auto last_days = count_days[last_month];
+            if (current_days < last_days)
             {
-                auto &new_last_day_of_month = tasks[count_days[current_month] - 1];
+                // cout << "Current month days count "  << current_days << " < " << last_days << " - prev month" << endl;
+                auto &new_last_day_of_month = tasks[current_days - 1];
 
-                for (auto i = count_days[last_month] - 1; i > count_days[current_month]; i--)
+                for (auto i = last_days - 1; i >= current_days; i--)
                 {
                     auto last_day_tasks = tasks.back();
+                    // cout << "Adding " << last_day_tasks.size() << " tasks  from task row " << tasks.size()-1 << " to exisiting " << new_last_day_of_month.size() << " tasks (row " << (current_days - 1) << ")" << endl;
                     new_last_day_of_month.insert(new_last_day_of_month.end(), last_day_tasks.begin(), last_day_tasks.end());
                     tasks.pop_back();
                 }
             }
-            else if (count_days[current_month] > count_days[last_month])
+            else if (current_days > last_days)
             {
-                tasks.insert(tasks.end(), count_days[current_month] - count_days[last_month] + 1, vector<string>());
+                tasks.insert(tasks.end(), current_days - last_days, vector<string>());
             }
         }
         else if (starts_with(command, "ADD"))
@@ -84,9 +88,10 @@ auto todo(const vector<string> &actions)
             auto date = get_middle_integer(command) - 1;
             auto name = get_ending_string(command);
 
-            // cout << "ADD " << date << " " << name << endl;
+            //cout << "ADD " << date << " " << name << endl;
 
             tasks[date].push_back(name);
+            // cout << "Now at date [" << date << "] there's [" << tasks[date].size() << "] tasks" << endl;
         }
     }
     return res;
@@ -177,12 +182,10 @@ bool test_2()
         };
     auto res = todo(commands);
     vector<string> expected{
-        "1 Feb ",
-        "2 Walk WalkPreparations ",
-        "0 ",
-        "0 ",
-        "2 Walk WalkPreparations ",
-        "3 Walk WalkPreparations Payment "};
+        "2 Jan Feb ",
+        "9 Mar Apr May Jun Jul Aug Sep Oct Nov ",
+        "2 Dec Jan ",
+    };
     return vectors_equal(res, expected);
 }
 #else
@@ -212,6 +215,15 @@ int main()
     {
         cout << "FAIL!" << endl;
         return -1;
+    } else {
+        cout << "Test 1 OK!" << endl;
+    }
+     if (!test_2())
+    {
+        cout << "FAIL!" << endl;
+        return -1;
+    }else {
+        cout << "Test 2 OK!" << endl;
     }
     cout << "OK!" << endl;
     return 0;
