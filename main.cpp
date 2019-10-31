@@ -1,97 +1,35 @@
 #include <iostream>
 #include <vector>
+#include <map>
 
 using namespace std;
 
 //#define TEST
 
-bool starts_with(const string &who, const string &what)
-{
-    if (who.length() <= what.length())
-        return false;
-    return who.find(what) == 0;
-}
-
-int get_ending_integer(const string &what)
-{
-    int start_space_pos = what.find_first_of(' ');
-    string arg = what.substr(start_space_pos + 1);
-    return atoi(arg.c_str());
-}
-
-int get_middle_integer(const string &what)
-{
-    int start_space_pos = what.find_first_of(' ');
-    int end_space_pos = what.find_last_of(' ');
-    string arg = what.substr(start_space_pos + 1, end_space_pos - start_space_pos);
-    return atoi(arg.c_str());
-}
-
-string get_ending_string(const string &what)
-{
-    int end_space_pos = what.find_last_of(' ');
-    string arg = what.substr(end_space_pos + 1);
-    return arg;
-}
-
-auto todo(const vector<string> &actions)
+auto anagram(const vector<string> &word_pairs)
 {
     vector<string> res;
-    const vector<int> count_days{31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-    int current_month = 0;
-    vector<vector<string>> tasks;
-    tasks.assign(count_days[current_month], vector<string>());
 
-    for (auto command : actions)
+    for (auto words : word_pairs)
     {
-        // cout << command << endl;
-        if (starts_with(command, "DUMP"))
+        auto space_pos = words.find_first_of(' ');
+        auto first_word = words.substr(0, space_pos);
+        auto second_word = words.substr(space_pos + 1);
+        // cout << "[" << first_word << "] vs [" << second_word << "]" << endl;
+        if (first_word.length() != second_word.length())
         {
-            auto date = get_ending_integer(command) - 1;
-            // cout << "DUMP " << date << endl;
-            string str;
-            str.append(to_string(tasks[date].size()) + " ");
-            for (auto record : tasks[date])
-            {
-                str.append(record + " ");
-            }
-            res.push_back(str);
+            res.push_back("NO");
         }
-        else if (command == "NEXT")
+        else
         {
-            auto last_month = current_month;
-            current_month = (current_month + 1) % 12;
-            // cout << "NEXT " << last_month << " / " << current_month << endl;
-
-            auto current_days = count_days[current_month];
-            auto last_days = count_days[last_month];
-            if (current_days < last_days)
+            map<char, int> first_word_chars;
+            map<char, int> second_word_chars;
+            for (auto i = 0; i < first_word.length(); i++)
             {
-                // cout << "Current month days count "  << current_days << " < " << last_days << " - prev month" << endl;
-                auto &new_last_day_of_month = tasks[current_days - 1];
-
-                for (auto i = last_days - 1; i >= current_days; i--)
-                {
-                    auto last_day_tasks = tasks.back();
-                    // cout << "Adding " << last_day_tasks.size() << " tasks  from task row " << tasks.size()-1 << " to exisiting " << new_last_day_of_month.size() << " tasks (row " << (current_days - 1) << ")" << endl;
-                    new_last_day_of_month.insert(new_last_day_of_month.end(), last_day_tasks.begin(), last_day_tasks.end());
-                    tasks.pop_back();
-                }
+                first_word_chars[first_word[i]]++;
+                second_word_chars[second_word[i]]++;
             }
-            else if (current_days > last_days)
-            {
-                tasks.insert(tasks.end(), current_days - last_days, vector<string>());
-            }
-        }
-        else if (starts_with(command, "ADD"))
-        {
-            auto date = get_middle_integer(command) - 1;
-            auto name = get_ending_string(command);
-
-            //cout << "ADD " << date << " " << name << endl;
-
-            tasks[date].push_back(name);
-            // cout << "Now at date [" << date << "] there's [" << tasks[date].size() << "] tasks" << endl;
+            res.push_back(first_word_chars == second_word_chars ? "YES" : "NO");
         }
     }
     return res;
@@ -199,7 +137,7 @@ int run()
     {
         getline(cin, command);
     }
-    auto result = todo(commands);
+    auto result = anagram(commands);
     for (auto item : result)
     {
         cout << item << endl;
@@ -215,14 +153,18 @@ int main()
     {
         cout << "FAIL!" << endl;
         return -1;
-    } else {
+    }
+    else
+    {
         cout << "Test 1 OK!" << endl;
     }
-     if (!test_2())
+    if (!test_2())
     {
         cout << "FAIL!" << endl;
         return -1;
-    }else {
+    }
+    else
+    {
         cout << "Test 2 OK!" << endl;
     }
     cout << "OK!" << endl;
