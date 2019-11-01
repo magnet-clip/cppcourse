@@ -1,35 +1,129 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <tuple>
 
 using namespace std;
 
-//#define TEST
+#define TEST
+bool starts_with(const string &who, const string &what)
+{
+    if (who.length() <= what.length())
+        return false;
+    return who.find(what) == 0;
+}
 
-auto anagram(const vector<string> &word_pairs)
+string join_vector(const vector<string> &items, string delimiter)
+{
+    string res;
+    if (items.size() == 0)
+    {
+        return "";
+    }
+
+    if (items.size() == 1)
+    {
+        return items[0];
+    }
+
+    for (auto i = 0; i < items.size() - 1; i++)
+    {
+        res += items[i] + delimiter;
+    }
+
+    res += items[items.size() - 1];
+    return res;
+}
+
+auto parse_bus_info(string command)
+{
+    string bus_name;
+    int stops_count;
+    vector<string> stops;
+
+    int state = 0;
+    // state
+    // 0 - reading bus number
+    // 1 - reading stops count
+    // 2 - reading stops
+    // 3 - finished
+
+    auto pos = command.find_first_of(' '); // end of command itself
+
+    // NEW_BUS bus stop_count stop1 stop2 ...
+    // NEW_BUS 32 3 Tolstopaltsevo Marushkino Vnukovo
+    while (state < 3)
+    {
+        auto last_pos = pos + 1;
+        pos = command.find_first_of(' ', last_pos);
+        switch (state)
+        {
+        case 0:
+            bus_name = command.substr(last_pos, pos - last_pos);
+            // cout << "Bus name: [" << bus_name << "]" << endl;
+            state++;
+            break;
+        case 1:
+            state++;
+            stops_count = stoi(command.substr(last_pos, pos - last_pos));
+            // cout << "Stops count: [" << stops_count << "]" << endl;
+            break;
+        case 2:
+            if (pos == string::npos)
+            {
+                auto stop_name = command.substr(last_pos);
+                // cout << "Stop name: [" << stop_name << "]" << endl;
+                stops.push_back(stop_name);
+
+                state++;
+            }
+            else
+            {
+                auto stop_name = command.substr(last_pos, pos - last_pos);
+                // cout << "Stop name: [" << stop_name << "]" << endl;
+                stops.push_back(stop_name);
+            }
+            break;
+        case 3:
+            cout << "End" << endl;
+            break;
+        }
+    }
+
+    return make_tuple(bus_name, stops_count, stops);
+}
+
+auto route(const vector<string> &commands)
 {
     vector<string> res;
+    map<string, vector<string>> stops_for_bus;
+    map<string, vector<string>> buses_for_stop;
 
-    for (auto words : word_pairs)
+    for (auto command : commands)
     {
-        auto space_pos = words.find_first_of(' ');
-        auto first_word = words.substr(0, space_pos);
-        auto second_word = words.substr(space_pos + 1);
-        // cout << "[" << first_word << "] vs [" << second_word << "]" << endl;
-        if (first_word.length() != second_word.length())
+        if (command == "ALL_BUSES")
         {
-            res.push_back("NO");
-        }
-        else
-        {
-            map<char, int> first_word_chars;
-            map<char, int> second_word_chars;
-            for (auto i = 0; i < first_word.length(); i++)
+            // print out all routes and stops
+            for (auto [bus, stops] : stops_for_bus)
             {
-                first_word_chars[first_word[i]]++;
-                second_word_chars[second_word[i]]++;
+                cout << "Bus " << bus << " " << join_vector(stops, " ") << endl;
             }
-            res.push_back(first_word_chars == second_word_chars ? "YES" : "NO");
+        }
+        else if (starts_with(command, "NEW_BUS"))
+        {
+            // NEW_BUS bus stop_count stop1 stop2 ...
+            // add bus route
+            const auto &[bus_name, stops_count, stops] = parse_bus_info(command);
+        }
+        else if (starts_with(command, "BUSES_FOR_STOP"))
+        {
+            // BUSES_FOR_STOP stop
+            // print which buses visit this stop
+        }
+        else if (starts_with(command, "STOPS_FOR_BUS"))
+        {
+            // STOPS_FOR_BUS bus
+            // print which stops does the bus visit
         }
     }
     return res;
@@ -55,80 +149,61 @@ bool vectors_equal(const vector<T> &v1, const vector<T> &v2)
     return true;
 }
 
+bool test_0()
+{
+    const auto &[bus_name, stops_count, stops] = parse_bus_info("NEW_BUS 32 3 Tolstopaltsevo Marushkino Vnukovo");
+
+    if (bus_name != "32")
+        return false;
+
+    if (stops_count != 3)
+        return false;
+
+    if (stops != vector<string>{"Tolstopaltsevo", "Marushkino", "Vnukovo"})
+        return false;
+
+    return true;
+}
+
 bool test_1()
 {
 
     vector<string>
         commands{
-            "ADD 5 Salary",
-            "ADD 31 Walk",
-            "ADD 30 WalkPreparations",
-            "NEXT",
-            "DUMP 5 ",
-            "DUMP 28 ",
-            "NEXT",
-            "DUMP 31",
-            "DUMP 30 ",
-            "DUMP 28 ",
-            "ADD 28 Payment",
-            "DUMP 28",
+            "10",
+            "ALL_BUSES",
+            "BUSES_FOR_STOP Marushkino",
+            "STOPS_FOR_BUS 32K",
+            "NEW_BUS 32 3 Tolstopaltsevo Marushkino Vnukovo",
+            "NEW_BUS 32K 6 Tolstopaltsevo Marushkino Vnukovo Peredelkino Solntsevo Skolkovo",
+            "BUSES_FOR_STOP Vnukovo",
+            "NEW_BUS 950 6 Kokoshkino Marushkino Vnukovo Peredelkino Solntsevo Troparyovo",
+            "NEW_BUS 272 4 Vnukovo Moskovsky Rumyantsevo Troparyovo",
+            "STOPS_FOR_BUS 272",
+            "ALL_BUSES",
         };
-    auto res = todo(commands);
+    auto res = route(commands);
     vector<string> expected{
-        "1 Salary ",
-        "2 Walk WalkPreparations ",
-        "0 ",
-        "0 ",
-        "2 Walk WalkPreparations ",
-        "3 Walk WalkPreparations Payment "};
-    return vectors_equal(res, expected);
-}
-
-bool test_2()
-{
-
-    vector<string>
-        commands{
-            "ADD 31 Jan",
-            "NEXT",
-            "ADD 28 Feb",
-            "NEXT",
-            "ADD 31 Mar",
-            "NEXT",
-            "ADD 30 Apr",
-            "NEXT",
-            "ADD 31 May",
-            "NEXT",
-            "ADD 30 Jun",
-            "NEXT",
-            "ADD 31 Jul",
-            "NEXT",
-            "ADD 31 Aug",
-            "NEXT",
-            "ADD 30 Sep",
-            "NEXT",
-            "ADD 31 Oct",
-            "NEXT",
-            "ADD 30 Nov",
-            "NEXT",
-            "ADD 31 Dec",
-            "NEXT",
-            "ADD 31 Jan",
-            "DUMP 28",
-            "DUMP 30",
-            "DUMP 31",
-        };
-    auto res = todo(commands);
-    vector<string> expected{
-        "2 Jan Feb ",
-        "9 Mar Apr May Jun Jul Aug Sep Oct Nov ",
-        "2 Dec Jan ",
+        "No buses",
+        "No stop",
+        "No bus",
+        "32 32K",
+        "Stop Vnukovo: 32 32K 950",
+        "Stop Moskovsky: no interchange",
+        "Stop Rumyantsevo: no interchange",
+        "Stop Troparyovo: 950",
+        "Bus 272: Vnukovo Moskovsky Rumyantsevo Troparyovo",
+        "Bus 32: Tolstopaltsevo Marushkino Vnukovo",
+        "Bus 32K: Tolstopaltsevo Marushkino Vnukovo Peredelkino Solntsevo Skolkovo",
+        "Bus 950: Kokoshkino Marushkino Vnukovo Peredelkino Solntsevo Troparyovo",
     };
     return vectors_equal(res, expected);
 }
+
 #else
 int run()
 {
+
     int num;
     cin >> num;
     cin >> ws;
@@ -137,7 +212,7 @@ int run()
     {
         getline(cin, command);
     }
-    auto result = anagram(commands);
+    auto result = route(commands);
     for (auto item : result)
     {
         cout << item << endl;
@@ -149,6 +224,15 @@ int run()
 int main()
 {
 #ifdef TEST
+    if (!test_0())
+    {
+        cout << "FAIL!" << endl;
+        return -1;
+    }
+    else
+    {
+        cout << "Test 0 OK!" << endl;
+    }
     if (!test_1())
     {
         cout << "FAIL!" << endl;
@@ -158,15 +242,7 @@ int main()
     {
         cout << "Test 1 OK!" << endl;
     }
-    if (!test_2())
-    {
-        cout << "FAIL!" << endl;
-        return -1;
-    }
-    else
-    {
-        cout << "Test 2 OK!" << endl;
-    }
+
     cout << "OK!" << endl;
     return 0;
 #else
