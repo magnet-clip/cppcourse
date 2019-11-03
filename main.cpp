@@ -1,16 +1,23 @@
 #include <iostream>
+#include <sstream>
 #include <vector>
 #include <map>
 #include <tuple>
+#include <algorithm> 
 
 using namespace std;
 
-#define TEST
+//#define TEST
 bool starts_with(const string &who, const string &what)
 {
     if (who.length() <= what.length())
         return false;
     return who.find(what) == 0;
+}
+
+string get_second_string(const string& str) {
+    auto pos = str.find_first_of(' ');
+    return str.substr(pos+1);
 }
 
 string join_vector(const vector<string> &items, string delimiter)
@@ -101,12 +108,20 @@ auto route(const vector<string> &commands)
 
     for (auto command : commands)
     {
+        stringstream buffer;
         if (command == "ALL_BUSES")
         {
             // print out all routes and stops
-            for (auto [bus, stops] : stops_for_bus)
-            {
-                cout << "Bus " << bus << " " << join_vector(stops, " ") << endl;
+            if (stops_for_bus.size()) {
+                for (auto [bus, stops] : stops_for_bus)
+                {
+                    buffer << "Bus " << bus << ": " << join_vector(stops, " ");
+                    res.push_back(buffer.str());
+                    buffer.str("");
+                }
+            } else {
+                buffer << "No buses";
+                res.push_back(buffer.str());
             }
         }
         else if (starts_with(command, "NEW_BUS"))
@@ -114,16 +129,45 @@ auto route(const vector<string> &commands)
             // NEW_BUS bus stop_count stop1 stop2 ...
             // add bus route
             const auto &[bus_name, stops_count, stops] = parse_bus_info(command);
+            for (auto stop: stops) {
+                stops_for_bus[bus_name].push_back(stop);
+                buses_for_stop[stop].push_back(bus_name);
+            }
         }
         else if (starts_with(command, "BUSES_FOR_STOP"))
         {
             // BUSES_FOR_STOP stop
             // print which buses visit this stop
+            auto stop = get_second_string(command);
+            if (!buses_for_stop.count(stop)) {
+                buffer << "No stop";
+            } else {
+                buffer << join_vector(buses_for_stop[stop], " ");
+            }
+            res.push_back(buffer.str());
         }
         else if (starts_with(command, "STOPS_FOR_BUS"))
         {
             // STOPS_FOR_BUS bus
             // print which stops does the bus visit
+            auto bus = get_second_string(command);
+            if (!stops_for_bus.count(bus)) {
+                buffer << "No bus";
+                res.push_back(buffer.str());
+            } else {
+                for (auto stop: stops_for_bus[bus]) {
+                    auto buses_for_this_stop = buses_for_stop[stop];
+                    auto search_iterator = find(buses_for_this_stop.begin(), buses_for_this_stop.end(), bus);
+                    buses_for_this_stop.erase(search_iterator);
+                    if (buses_for_this_stop.size()) {
+                        buffer << "Stop " << stop << ": " << join_vector(buses_for_this_stop, " ");
+                    } else {
+                        buffer << "Stop " << stop << ": no interchange";
+                    }
+                    res.push_back(buffer.str());
+                    buffer.str("");
+                }
+            }
         }
     }
     return res;
@@ -142,8 +186,10 @@ bool vectors_equal(const vector<T> &v1, const vector<T> &v2)
     {
         if (v1[i] != v2[i])
         {
-            cout << v1[i] << " <> " << v2[i] << endl;
+            cout << "At index " << i << " " << v1[i] << " <> " << v2[i] << endl;
             return false;
+        } else {
+            cout << "At index " << i << " " << v1[i] << " == " << v2[i] << endl;
         }
     }
     return true;
@@ -226,7 +272,7 @@ int main()
 #ifdef TEST
     if (!test_0())
     {
-        cout << "FAIL!" << endl;
+        cout << "TEST 0 FAIL!" << endl;
         return -1;
     }
     else
@@ -235,7 +281,7 @@ int main()
     }
     if (!test_1())
     {
-        cout << "FAIL!" << endl;
+        cout << "TEST 1 FAIL!" << endl;
         return -1;
     }
     else
