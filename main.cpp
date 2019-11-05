@@ -16,47 +16,15 @@ bool starts_with(const string &who, const string &what)
     return who.find(what) == 0;
 }
 
-auto parse_route(string command)
+auto get_two_words(string str)
 {
-    set<string> stops;
-    int count;
-    int state = 0;
-    // state
-    // 0 - reading stops
-    // 1 - finished
+    auto pos1 = str.find_first_of(' ');
+    auto pos2 = str.find_first_of(' ', pos1 + 1);
 
-    auto pos = command.find_first_of(' '); // end of command itself
-    // stop_count stop1 stop2 ...
-    while (state < 1)
-    {
-        auto last_pos = pos + 1;
-        string temp;
-        pos = command.find_first_of(' ', last_pos);
-        switch (state)
-        {
-        case 0:
-            if (pos == string::npos)
-            {
-                auto stop_name = command.substr(last_pos);
-                // cout << "Stop name: [" << stop_name << "]" << endl;
-                stops.insert(stop_name);
+    auto word1 = str.substr(pos1 + 1, pos2 - pos1 - 1);
+    auto word2 = str.substr(pos2 + 1);
 
-                state++;
-            }
-            else
-            {
-                auto stop_name = command.substr(last_pos, pos - last_pos);
-                // cout << "Stop name: [" << stop_name << "]" << endl;
-                stops.insert(stop_name);
-            }
-            break;
-        case 1:
-            // cout << "End" << endl;
-            break;
-        }
-    }
-
-    return stops;
+    return make_tuple(word1, word2);
 }
 
 string get_second_string(const string &str)
@@ -87,27 +55,70 @@ string join_vector(const vector<string> &items, string delimiter)
     return res;
 }
 
-auto numbers(const vector<string> &commands)
+auto synonims(const vector<string> &commands)
 {
     vector<string> res;
-    auto route_counter = 0;
-    map<set<string>, int> routes;
+    map<string, set<string>> dictionary;
 
     for (auto command : commands)
     {
-        stringstream buffer;
-        auto route = set<string>(parse_route(command));
-        if (routes.count(route))
+        if (starts_with(command, "COUNT"))
         {
-            buffer << "Already exists for " << routes[route];
+            // COUNT word
+            auto word = get_second_string(command);
+            // cout << "COUNT [" << word << "]" << endl;
+            auto count = 0;
+            if (dictionary.count(word))
+            {
+                count = dictionary[word].size();
+            }
+            res.push_back(to_string(count));
         }
-        else
+        else if (starts_with(command, "ADD"))
         {
-            routes[route] = ++route_counter;
-            buffer << "New bus " << route_counter;
+            // ADD word1 word2
+            auto [word1, word2] = get_two_words(command);
+            // cout << "ADD [" << word1 << "] [" << word2 << "]" << endl;
+            if (dictionary.count(word1))
+            {
+                dictionary[word1].insert(word2);
+            }
+            else
+            {
+                dictionary[word1] = set<string>{word2};
+            }
+
+            if (dictionary.count(word2))
+            {
+                dictionary[word2].insert(word1);
+            }
+            else
+            {
+                dictionary[word2] = set<string>{word1};
+            }
         }
-        res.push_back(buffer.str());
-        buffer.str("");
+        else if (starts_with(command, "CHECK"))
+        {
+            // CHECK word1 word2
+            auto [word1, word2] = get_two_words(command);
+            // cout << "CHECK [" << word1 << "] [" << word2 << "]" << endl;
+            if (dictionary.count(word1))
+            {
+                if (dictionary[word1].count(word2))
+                {
+                    res.push_back("YES");
+                }
+                else
+                {
+                    res.push_back("NO");
+                }
+            }
+            else
+            {
+                // cout << "NO" << endl;
+                res.push_back("NO");
+            }
+        }
     }
     return res;
 }
@@ -118,31 +129,21 @@ bool vectors_equal(const vector<T> &v1, const vector<T> &v2)
 {
     if (v1.size() != v2.size())
     {
-        cout << "Sizes are different" << endl;
+        // cout << "Sizes are different" << endl;
         return false;
     }
     for (int i = 0; i < v1.size(); i++)
     {
         if (v1[i] != v2[i])
         {
-            cout << "At index " << i << " " << v1[i] << " <> " << v2[i] << endl;
+            // cout << "At index " << i << " " << v1[i] << " <> " << v2[i] << endl;
             return false;
         }
         else
         {
-            cout << "At index " << i << " " << v1[i] << " == " << v2[i] << endl;
+            // cout << "At index " << i << " " << v1[i] << " == " << v2[i] << endl;
         }
     }
-    return true;
-}
-
-bool test_0()
-{
-    const auto &stops = parse_route("3 Tolstopaltsevo Marushkino Vnukovo");
-
-    if (stops != set<string>{"Tolstopaltsevo", "Marushkino", "Vnukovo"})
-        return false;
-
     return true;
 }
 
@@ -151,17 +152,23 @@ bool test_1()
 
     vector<string>
         commands{
-            "2 Marushkino Kokoshkino",
-            "1 Kokoshkino",
-            "2 Marushkino Kokoshkino",
-            "2 Kokoshkino Marushkino",
+            "ADD program code",
+            "COUNT cipher",
+            "ADD code cipher",
+            "COUNT code",
+            "COUNT program",
+            "CHECK code program",
+            "CHECK program cipher",
+            "CHECK cpp java",
         };
-    auto res = numbers(commands);
+    auto res = synonims(commands);
     vector<string> expected{
-        "New bus 1",
-        "New bus 2",
-        "Already exists for 1",
-        "Already exists for 1",
+        "0",
+        "2",
+        "1",
+        "YES",
+        "NO",
+        "NO",
     };
     return vectors_equal(res, expected);
 }
@@ -178,7 +185,7 @@ int run()
     {
         getline(cin, command);
     }
-    auto result = numbers(commands);
+    auto result = synonims(commands);
     for (auto item : result)
     {
         cout << item << endl;
@@ -190,15 +197,6 @@ int run()
 int main()
 {
 #ifdef TEST
-    if (!test_0())
-    {
-        cout << "TEST 0 FAIL!" << endl;
-        return -1;
-    }
-    else
-    {
-        cout << "Test 0 OK!" << endl;
-    }
     if (!test_1())
     {
         cout << "TEST 1 FAIL!" << endl;
