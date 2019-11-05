@@ -4,10 +4,11 @@
 #include <map>
 #include <tuple>
 #include <algorithm>
+#include <set>
 
 using namespace std;
 
-// #define TEST
+//#define TEST
 bool starts_with(const string &who, const string &what)
 {
     if (who.length() <= what.length())
@@ -17,7 +18,7 @@ bool starts_with(const string &who, const string &what)
 
 auto parse_route(string command)
 {
-    vector<string> stops;
+    set<string> stops;
     int count;
     int state = 0;
     // state
@@ -38,7 +39,7 @@ auto parse_route(string command)
             {
                 auto stop_name = command.substr(last_pos);
                 // cout << "Stop name: [" << stop_name << "]" << endl;
-                stops.push_back(stop_name);
+                stops.insert(stop_name);
 
                 state++;
             }
@@ -46,7 +47,7 @@ auto parse_route(string command)
             {
                 auto stop_name = command.substr(last_pos, pos - last_pos);
                 // cout << "Stop name: [" << stop_name << "]" << endl;
-                stops.push_back(stop_name);
+                stops.insert(stop_name);
             }
             break;
         case 1:
@@ -90,12 +91,12 @@ auto numbers(const vector<string> &commands)
 {
     vector<string> res;
     auto route_counter = 0;
-    map<vector<string>, int> routes;
+    map<set<string>, int> routes;
 
     for (auto command : commands)
     {
         stringstream buffer;
-        auto route = parse_route(command);
+        auto route = set<string>(parse_route(command));
         if (routes.count(route))
         {
             buffer << "Already exists for " << routes[route];
@@ -139,7 +140,7 @@ bool test_0()
 {
     const auto &stops = parse_route("3 Tolstopaltsevo Marushkino Vnukovo");
 
-    if (stops != vector<string>{"Tolstopaltsevo", "Marushkino", "Vnukovo"})
+    if (stops != set<string>{"Tolstopaltsevo", "Marushkino", "Vnukovo"})
         return false;
 
     return true;
@@ -160,7 +161,7 @@ bool test_1()
         "New bus 1",
         "New bus 2",
         "Already exists for 1",
-        "New bus 3",
+        "Already exists for 1",
     };
     return vectors_equal(res, expected);
 }
