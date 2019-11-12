@@ -8,7 +8,7 @@
 
 using namespace std;
 
-string join_vector(const vector<int> &items, string delimiter)
+string join_vector(const vector<string> &items, string delimiter)
 {
     string res;
     if (items.size() == 0)
@@ -18,15 +18,22 @@ string join_vector(const vector<int> &items, string delimiter)
 
     if (items.size() == 1)
     {
-        return to_string(items[0]);
+        return items[0];
     }
 
     for (auto i = 0; i < items.size() - 1; i++)
     {
-        res += to_string(items[i]) + delimiter;
+        res += items[i] + delimiter;
     }
 
-    res += to_string(items[items.size() - 1]);
+    res += items[items.size() - 1];
+    return res;
+}
+
+string tolower_str(const string &str)
+{
+    auto res = str;
+    transform(res.begin(), res.end(), res.begin(), ::tolower);
     return res;
 }
 
@@ -35,13 +42,13 @@ int run()
 
     int len;
     cin >> len;
-    vector<int> numbers(len, 0);
-    for (auto &num : numbers)
+    vector<string> strings(len, "");
+    for (auto &str : strings)
     {
-        cin >> num;
+        cin >> str;
     }
-    sort(numbers.begin(), numbers.end(), [](const int &a, const int &b) { return abs(a) < abs(b); });
-    cout << join_vector(numbers, " ");
+    sort(strings.begin(), strings.end(), [](const string &a, const string &b) { return tolower_str(a) < tolower_str(b); });
+    cout << join_vector(strings, " ");
     return 0;
 }
 
