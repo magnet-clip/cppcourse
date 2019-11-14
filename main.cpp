@@ -29,13 +29,26 @@ string join_vector(const vector<string> &items, string delimiter) {
 
 class Person {
 public:
+  Person(string xname, string xsurname, int year) {
+    birth_year = year;
+    name[year] = xname;
+    surname[year] = xsurname;
+  }
+
   void ChangeFirstName(int year, const string &first_name) {
-    name[year] = first_name;
+    if (year >= birth_year)
+      name[year] = first_name;
   }
+
   void ChangeLastName(int year, const string &last_name) {
-    surname[year] = last_name;
+    if (year >= birth_year)
+      surname[year] = last_name;
   }
-  string GetFullName(int year) {
+
+  string GetFullName(int year) const {
+    if (year < birth_year)
+      return "No person";
+
     auto xname = get_item_by_year(name, year);
     auto xsurname = get_item_by_year(surname, year);
 
@@ -50,7 +63,10 @@ public:
     }
   }
 
-  string GetFullNameWithHistory(int year) {
+  string GetFullNameWithHistory(int year) const {
+    if (year < birth_year)
+      return "No person";
+
     auto xname = get_full_item_by_year(name, year);
     auto xsurname = get_full_item_by_year(surname, year);
 
@@ -66,10 +82,11 @@ public:
   }
 
 private:
+  int birth_year;
   map<int, string> name;
   map<int, string> surname;
 
-  string get_item_by_year(const map<int, string> &coll, const int &year) {
+  string get_item_by_year(const map<int, string> &coll, const int &year) const {
     if (coll.size() == 0)
       return "";
 
@@ -81,7 +98,8 @@ private:
     return "";
   }
 
-  string get_full_item_by_year(const map<int, string> &coll, const int &year) {
+  string get_full_item_by_year(const map<int, string> &coll,
+                               const int &year) const {
     if (coll.size() == 0)
       return "";
 
@@ -139,126 +157,34 @@ bool vectors_equal(const vector<T> &v1, const vector<T> &v2) {
 
 bool test_1() {
 
-  Person person;
   vector<string> res;
 
-  person.ChangeFirstName(1965, "Polina");
-  person.ChangeLastName(1967, "Sergeeva");
+  Person person("Polina", "Sergeeva", 1960);
   string x;
-  for (int year : {1900, 1965, 1990}) {
-    x = person.GetFullName(year);
+  for (int year : {1959, 1960}) {
+    x = person.GetFullNameWithHistory(year);
     cout << x << endl;
     res.push_back(x);
   }
 
-  person.ChangeFirstName(1970, "Appolinaria");
-  for (int year : {1969, 1970}) {
-    x = person.GetFullName(year);
-    cout << x << endl;
-    res.push_back(x);
-  }
-
-  person.ChangeLastName(1968, "Volkova");
-  for (int year : {1969, 1970}) {
-    x = person.GetFullName(year);
+  person.ChangeFirstName(1965, "Appolinaria");
+  person.ChangeLastName(1967, "Ivanova");
+  for (int year : {1965, 1967}) {
+    x = person.GetFullNameWithHistory(year);
     cout << x << endl;
     res.push_back(x);
   }
 
   vector<string> expected{
-      "Incognito",           "Polina with unknown last name", "Polina Sergeeva",
-      "Polina Sergeeva",     "Appolinaria Sergeeva",          "Polina Volkova",
-      "Appolinaria Volkova",
-  };
-  return vectors_equal(res, expected);
-}
-
-bool test_2() {
-  Person person;
-  vector<string> res;
-
-  person.ChangeFirstName(1965, "Polina");
-  person.ChangeLastName(1967, "Sergeeva");
-  string x;
-  for (int year : {1900, 1965, 1990}) {
-    x = person.GetFullNameWithHistory(year);
-    cout << x << endl;
-    res.push_back(x);
-  }
-
-  person.ChangeFirstName(1970, "Appolinaria");
-  for (int year : {1969, 1970}) {
-    x = person.GetFullNameWithHistory(year);
-    cout << x << endl;
-    res.push_back(x);
-  }
-
-  person.ChangeLastName(1968, "Volkova");
-  for (int year : {1969, 1970}) {
-    x = person.GetFullNameWithHistory(year);
-    cout << x << endl;
-    res.push_back(x);
-  }
-
-  person.ChangeFirstName(1990, "Polina");
-  person.ChangeLastName(1990, "Volkova-Sergeeva");
-  x = person.GetFullNameWithHistory(1990);
-  cout << x << endl;
-  res.push_back(x);
-
-  person.ChangeFirstName(1966, "Pauline");
-  x = person.GetFullNameWithHistory(1966);
-  cout << x << endl;
-  res.push_back(x);
-
-  person.ChangeLastName(1960, "Sergeeva");
-  for (int year : {1960, 1967}) {
-    x = person.GetFullNameWithHistory(year);
-    cout << x << endl;
-    res.push_back(x);
-  }
-
-  person.ChangeLastName(1961, "Ivanova");
-  x = person.GetFullNameWithHistory(1967);
-  cout << x << endl;
-  res.push_back(x);
-
-  vector<string> expected{
-      "Incognito",
-      "Polina with unknown last name",
-      "Polina Sergeeva",
+      "No person",
       "Polina Sergeeva",
       "Appolinaria (Polina) Sergeeva",
-      "Polina Volkova (Sergeeva)",
-      "Appolinaria (Polina) Volkova (Sergeeva)",
-      "Polina (Appolinaria, Polina) Volkova-Sergeeva (Volkova, Sergeeva)",
-      "Pauline (Polina) with unknown last name",
-      "Sergeeva with unknown first name",
-      "Pauline (Polina) Sergeeva",
-      "Pauline (Polina) Sergeeva (Ivanova, Sergeeva)",
-  };
-  return vectors_equal(res, expected);
-}
-
-bool test_3() {
-  Person person;
-  vector<string> res;
-
-  person.ChangeFirstName(1900, "Eugene");
-  person.ChangeLastName(1900, "Sokolov");
-  person.ChangeLastName(1910, "Sokolov");
-  person.ChangeFirstName(1920, "Evgeny");
-  person.ChangeLastName(1930, "Sokolov");
-  string x = person.GetFullNameWithHistory(1940);
-  cout << x << endl;
-  res.push_back(x);
-
-  vector<string> expected{
-      "Evgeny (Eugene) Sokolov",
+      "Appolinaria (Polina) Ivanova (Sergeeva)",
 
   };
   return vectors_equal(res, expected);
 }
+
 #else
 int run() {
 
@@ -284,18 +210,6 @@ int main() {
     return -1;
   } else {
     cout << "Test 1 OK!" << endl;
-  }
-  if (!test_3()) {
-    cout << "TEST 3 FAIL!" << endl;
-    return -1;
-  } else {
-    cout << "Test 3 OK!" << endl;
-  }
-  if (!test_2()) {
-    cout << "TEST 2 FAIL!" << endl;
-    return -1;
-  } else {
-    cout << "Test 2 OK!" << endl;
   }
 
   cout << "OK!" << endl;
