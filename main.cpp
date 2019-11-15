@@ -31,9 +31,9 @@ public:
 
   double Apply(double x) const {
     if (op == '+') {
-      return val + x;
+      return x + val;
     } else {
-      return val - x;
+      return x - val;
     }
   }
 
@@ -58,7 +58,7 @@ public:
     for (auto &part : parts) {
       part.Invert();
     }
-    reverse(parts.begin(), parts.end());
+    reverse(begin(parts), end(parts));
   }
 
   double Apply(double x) const {
@@ -72,25 +72,44 @@ private:
   vector<FunctionPart> parts;
 };
 
-Function MakeWeightFunction(const Params &params, const Image &image) {
+Function MakeWeightFunction1(const Params &params, const Image &image) {
   Function function;
   function.AddPart('-', image.freshness * params.a + params.b);
   function.AddPart('+', image.rating * params.c);
   return function;
 }
 
-double ComputeImageWeight(const Params &params, const Image &image) {
-  Function function = MakeWeightFunction(params, image);
+double ComputeImageWeight1(const Params &params, const Image &image) {
+  Function function = MakeWeightFunction1(params, image);
   return function.Apply(image.quality);
 }
 
-double ComputeQualityByWeight(const Params &params, const Image &image,
-                              double weight) {
-  Function function = MakeWeightFunction(params, image);
+double ComputeQualityByWeight1(const Params &params, const Image &image,
+                               double weight) {
+  Function function = MakeWeightFunction1(params, image);
   function.Invert();
   return function.Apply(weight);
 }
 
+Function MakeWeightFunction2(const Params &params, const Image &image) {
+  Function function;
+  function.AddPart('*', params.a);
+  function.AddPart('-', image.freshness * params.b);
+  function.AddPart('+', image.rating * params.c);
+  return function;
+}
+
+double ComputeImageWeight2(const Params &params, const Image &image) {
+  Function function = MakeWeightFunction2(params, image);
+  return function.Apply(image.quality);
+}
+
+double ComputeQualityByWeight2(const Params &params, const Image &image,
+                               double weight) {
+  Function function = MakeWeightFunction2(params, image);
+  function.Invert();
+  return function.Apply(weight);
+}
 #define TEST
 
 #ifdef TEST
@@ -98,13 +117,28 @@ double ComputeQualityByWeight(const Params &params, const Image &image,
 bool test_1() {
   Image image = {10, 2, 6};
   Params params = {4, 2, 6};
-  if (ComputeImageWeight(params, image) != 36) {
+  if (ComputeImageWeight1(params, image) != 36) {
     cout << "Fail1" << endl;
     return false;
   }
-  if (ComputeQualityByWeight(params, image, 46) != 20) {
-    cout << "Fail2: " << ComputeQualityByWeight(params, image, 46)
+  if (ComputeQualityByWeight1(params, image, 46) != 20) {
+    cout << "Fail2: " << ComputeQualityByWeight1(params, image, 46)
          << " != " << 20 << endl;
+    return false;
+  }
+  return true;
+}
+
+bool test_2() {
+  Image image = {10, 2, 6};
+  Params params = {4, 2, 6};
+  if (ComputeImageWeight2(params, image) != 72) {
+    cout << "Fail1" << endl;
+    return false;
+  }
+  if (ComputeQualityByWeight2(params, image, 46) != 20) {
+    cout << "Fail2: " << ComputeQualityByWeight1(params, image, 46)
+         << " != " << 5 << endl;
     return false;
   }
   return true;
