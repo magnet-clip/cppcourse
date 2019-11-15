@@ -13,52 +13,105 @@ struct Specialization {
   explicit Specialization(string specialization)
       : specialization(specialization) {}
 };
-
-struct Course {
-  string course;
-  explicit Course(string course) : course(course) {}
+struct Image {
+  double quality;
+  double freshness;
+  double rating;
 };
 
-struct Week {
-  string week;
-  explicit Week(string week) : week(week) {}
+struct Params {
+  double a;
+  double b;
+  double c;
 };
 
-struct LectureTitle {
-  string specialization;
-  string course;
-  string week;
-  LectureTitle(Specialization specialization, Course course, Week week) {
-    this->specialization = specialization.specialization;
-    this->course = course.course;
-    this->week = week.week;
-  };
+class FunctionPart {
+public:
+  FunctionPart(char op, double val) : op(op), val(val) {}
+
+  double Apply(double x) const {
+    if (op == '+') {
+      return val + x;
+    } else {
+      return val - x;
+    }
+  }
+
+  void Invert() {
+    if (op == '+') {
+      op = '-';
+    } else {
+      op = '+';
+    }
+  }
+
+private:
+  char op;
+  double val;
 };
+
+class Function {
+public:
+  void AddPart(char op, double val) { parts.push_back({op, val}); }
+
+  void Invert() {
+    for (auto &part : parts) {
+      part.Invert();
+    }
+    reverse(parts.begin(), parts.end());
+  }
+
+  double Apply(double x) const {
+    for (const auto &part : parts) {
+      x = part.Apply(x);
+    }
+    return x;
+  }
+
+private:
+  vector<FunctionPart> parts;
+};
+
+Function MakeWeightFunction(const Params &params, const Image &image) {
+  Function function;
+  function.AddPart('-', image.freshness * params.a + params.b);
+  function.AddPart('+', image.rating * params.c);
+  return function;
+}
+
+double ComputeImageWeight(const Params &params, const Image &image) {
+  Function function = MakeWeightFunction(params, image);
+  return function.Apply(image.quality);
+}
+
+double ComputeQualityByWeight(const Params &params, const Image &image,
+                              double weight) {
+  Function function = MakeWeightFunction(params, image);
+  function.Invert();
+  return function.Apply(weight);
+}
 
 #define TEST
 
 #ifdef TEST
 
-template <typename T>
-bool vectors_equal(const vector<T> &v1, const vector<T> &v2) {
-  if (v1.size() != v2.size()) {
-    // cout << "Sizes are different" << endl;
+bool test_1() {
+  Image image = {10, 2, 6};
+  Params params = {4, 2, 6};
+  if (ComputeImageWeight(params, image) != 36) {
+    cout << "Fail1" << endl;
     return false;
   }
-  for (int i = 0; i < v1.size(); i++) {
-    if (v1[i] != v2[i]) {
-      // cout << "At index " << i << " " << v1[i] << " <> " << v2[i] << endl;
-      return false;
-    } else {
-      // cout << "At index " << i << " " << v1[i] << " == " << v2[i] << endl;
-    }
+  if (ComputeQualityByWeight(params, image, 46) != 20) {
+    cout << "Fail2: " << ComputeQualityByWeight(params, image, 46)
+         << " != " << 20 << endl;
+    return false;
   }
   return true;
 }
 
-bool test_1() {}
-
 #else
+
 int run() {
 
   int num;
