@@ -32,6 +32,10 @@ public:
   double Apply(double x) const {
     if (op == '+') {
       return x + val;
+    } else if (op == '*') {
+      return x * val;
+    } else if (op == '/') {
+      return x / val;
     } else {
       return x - val;
     }
@@ -40,7 +44,11 @@ public:
   void Invert() {
     if (op == '+') {
       op = '-';
-    } else {
+    } else if (op == '*') {
+      op = '/';
+    } else if (op == '/') {
+      op = '*';
+    } else if (op == '-') {
       op = '+';
     }
   }
@@ -136,8 +144,8 @@ bool test_2() {
     cout << "Fail1" << endl;
     return false;
   }
-  if (ComputeQualityByWeight2(params, image, 46) != 20) {
-    cout << "Fail2: " << ComputeQualityByWeight1(params, image, 46)
+  if (ComputeQualityByWeight2(params, image, 52) != 5) {
+    cout << "Fail2: " << ComputeQualityByWeight1(params, image, 52)
          << " != " << 5 << endl;
     return false;
   }
@@ -171,7 +179,12 @@ int main() {
   } else {
     cout << "Test 1 OK!" << endl;
   }
-
+  if (!test_2()) {
+    cout << "TEST 2 FAIL!" << endl;
+    return -1;
+  } else {
+    cout << "Test 2 OK!" << endl;
+  }
   cout << "OK!" << endl;
   return 0;
 #else
