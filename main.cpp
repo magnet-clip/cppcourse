@@ -8,11 +8,7 @@
 
 using namespace std;
 
-struct Specialization {
-  string specialization;
-  explicit Specialization(string specialization)
-      : specialization(specialization) {}
-};
+
 struct Image {
   double quality;
   double freshness;
