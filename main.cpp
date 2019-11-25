@@ -10,9 +10,9 @@ using namespace std;
 
 #ifdef TEST
 stringstream ss;
-#define ECHO(str) (ss << str << endl)
+#define ECHO(str) (ss << (str) << endl)
 #else
-#define ECHO(str) (cout << str << endl)
+#define ECHO(str) (cout << (str) << endl)
 #endif
 
 class date_format_exception : exception {
@@ -35,6 +35,9 @@ public:
     stringstream date_stream(str);
 
     getline(date_stream, raw_year, '-');
+    getline(date_stream, raw_month, '-');
+    getline(date_stream, raw_day);
+
     try {
       year = stoi(raw_year);
     } catch (invalid_argument) {
@@ -43,7 +46,6 @@ public:
       throw date_format_exception(msg_stream.str());
     }
 
-    getline(date_stream, raw_month, '-');
     try {
       month = stoi(raw_month);
     } catch (invalid_argument) {
@@ -52,18 +54,17 @@ public:
       throw date_format_exception(msg_stream.str());
     }
 
-    if (month < 1 || month > 12) {
-      stringstream msg_stream;
-      msg_stream << "Month value is invalid: " << month;
-      throw date_format_exception(msg_stream.str());
-    }
-
-    getline(date_stream, raw_day);
     try {
       day = stoi(raw_day);
     } catch (invalid_argument) {
       stringstream msg_stream;
       msg_stream << "Wrong date format: " << str << " [" << raw_day << "]";
+      throw date_format_exception(msg_stream.str());
+    }
+
+    if (month < 1 || month > 12) {
+      stringstream msg_stream;
+      msg_stream << "Month value is invalid: " << month;
       throw date_format_exception(msg_stream.str());
     }
 
@@ -107,12 +108,32 @@ public:
   void AddEvent(const Date &date, const string &event) {
     data[date].insert(event);
   }
+
   bool DeleteEvent(const Date &date, const string &event) {
     if (data.count(date)) {
+      ECHO("Deleted successfully");
       data[date].erase(event);
+      if (data[date].size() == 0) {
+        data.erase(date);
+      }
+      return true;
+    } else {
+      ECHO("Event not found");
+      return false;
     }
   }
-  int DeleteDate(const Date &date) { data.erase(date); }
+
+  int DeleteDate(const Date &date) {
+    int count = 0;
+    if (data.count(date)) {
+      count = data[date].size();
+      data.erase(date);
+    }
+    stringstream msg;
+    msg << "Deleted " << count << " events";
+    ECHO(msg.str());
+    return count;
+  }
 
   void Find(const Date &date) {
     if (data.count(date)) {
@@ -125,7 +146,9 @@ public:
   void Print() const {
     for (const auto &[date, items] : data) {
       for (const auto &item : items) {
-        ECHO(item);
+        stringstream msg;
+        msg << date << " " << item;
+        ECHO(msg.str());
       }
     }
   }
@@ -211,6 +234,25 @@ void database(const vector<string> &lines) {
 }
 
 #ifdef TEST
+
+bool compare(vector<string> output) {
+  for (const auto &item : output) {
+    string str;
+    if (ss.eof()) {
+      cout << "ss ended";
+      return false;
+    }
+    getline(ss, str);
+    if (str != item) {
+      cout << str << " != " << item << endl;
+      return false;
+    } else {
+      cout << "[" << str << "] == [" << item << "]" << endl;
+    }
+  }
+  return true;
+}
+
 bool test1() {
   database({
       "Add 0-1-2 event1",
@@ -223,35 +265,13 @@ bool test1() {
       "Del 1-2-3 event2",
   });
 
-  vector<string> output{
+  return compare({
       "event1",
       "Deleted 1 events",
       "0001-02-03 event2",
       "Deleted successfully",
       "Event not found",
-  };
-
-  for (const auto &item : output) {
-    string str;
-    if (ss.eof()) {
-      cout << "ss ended";
-      return false;
-    }
-    ss >> str;
-    if (str != item) {
-      cout << str << " != " << item << endl;
-      return false;
-    } else {
-      cout << "[" << str << "] == [" << item << "]" << endl;
-    }
-  }
-  if (!ss.eof()) {
-    cout << "ss not ended";
-    return false;
-  }
-  return true;
-
-  // return vectors_equal(res, output);
+  });
 }
 
 bool test2() {
@@ -259,9 +279,9 @@ bool test2() {
       "Add 0-13-32 event1",
   });
 
-  vector<string> output{
+  return compare({
       "Month value is invalid: 13",
-  };
+  });
 
   // return vectors_equal(res, output);
 }
@@ -271,9 +291,9 @@ bool test3() {
       "Add 1---1-1 event1",
   });
 
-  vector<string> output{
+  return compare({
       "Wrong date format: 1---1-1",
-  };
+  });
 }
 
 bool test4() {
@@ -281,9 +301,9 @@ bool test4() {
       "Add 0-11-32 event1",
   });
 
-  vector<string> output{
+  return compare({
       "Day value is invalid: 32",
-  };
+  });
 }
 #else
 
@@ -315,14 +335,12 @@ int main() {
 
 #else
   vector<string> commands;
+  string command;
   while (getline(cin, command)) {
     commands.push_back(command);
   }
 
-  auto res = database(commands);
-  for (const auto &str : res) {
-    cout << str << endl;
-  }
+  database(commands);
 
   return 0;
 #endif
