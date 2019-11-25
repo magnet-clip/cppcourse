@@ -1,8 +1,19 @@
 #include <iomanip>
 #include <iostream>
+#include <map>
+#include <set>
 #include <sstream>
 #include <vector>
 using namespace std;
+
+#define TEST
+
+#ifdef TEST
+stringstream ss;
+#define ECHO(str) (ss << str << endl)
+#else
+#define ECHO(str) (cout << str << endl)
+#endif
 
 class date_format_exception : exception {
 public:
@@ -47,7 +58,7 @@ public:
       throw date_format_exception(msg_stream.str());
     }
 
-    getline(date_stream, raw_day, '-');
+    getline(date_stream, raw_day);
     try {
       day = stoi(raw_day);
     } catch (invalid_argument) {
@@ -93,18 +104,38 @@ ostream &operator<<(ostream &stream, const Date &date) {
 
 class Database {
 public:
-  void AddEvent(const Date &date, const string &event);
-  bool DeleteEvent(const Date &date, const string &event);
-  int DeleteDate(const Date &date);
+  void AddEvent(const Date &date, const string &event) {
+    data[date].insert(event);
+  }
+  bool DeleteEvent(const Date &date, const string &event) {
+    if (data.count(date)) {
+      data[date].erase(event);
+    }
+  }
+  int DeleteDate(const Date &date) { data.erase(date); }
 
-  vector<string> Find(const Date &date) const;
+  void Find(const Date &date) {
+    if (data.count(date)) {
+      for (const auto &item : data[date]) {
+        ECHO(item);
+      }
+    }
+  }
 
-  void Print() const;
+  void Print() const {
+    for (const auto &[date, items] : data) {
+      for (const auto &item : items) {
+        ECHO(item);
+      }
+    }
+  }
+
+private:
+  map<Date, set<string>> data;
 };
 
-vector<string> database(const vector<string> &lines) {
+void database(const vector<string> &lines) {
   Database db;
-  vector<string> res;
 
   for (const auto &line : lines) {
     stringstream command_stream(line);
@@ -113,59 +144,75 @@ vector<string> database(const vector<string> &lines) {
     if (command == "Add") {
       string event;
       string date;
+
+      // reading event and date as plain strings
       command_stream >> date >> event;
 
       try {
+        // converting string to date
         Date the_date(date);
+
+        db.AddEvent(date, event);
       } catch (date_format_exception &e) {
+        // in case of error, show message
         stringstream response;
         response << e.getMessage();
-        res.push_back(response.str());
-        continue;
+        ECHO(response.str());
       }
+
     } else if (command == "Del") {
+      string date;
+      string event;
+
+      // reading event and date as plain strings
+      command_stream >> date;
+      try {
+        // converting string to date
+        Date the_date(date);
+
+        if (command_stream.eof()) {
+          db.DeleteDate(date);
+        } else {
+          command_stream >> event;
+          db.DeleteEvent(date, event);
+        }
+      } catch (date_format_exception &e) {
+        // in case of error, show message
+        stringstream response;
+        response << e.getMessage();
+        ECHO(response.str());
+      }
     } else if (command == "Find") {
+      string date;
+      string event;
+
+      // reading event and date as plain strings
+      command_stream >> date;
+      try {
+        // converting string to date
+        Date the_date(date);
+
+        db.Find(date);
+      } catch (date_format_exception &e) {
+        // in case of error, show message
+        stringstream response;
+        response << e.getMessage();
+        ECHO(response.str());
+      }
     } else if (command == "Print") {
-      // db.Print();
+      db.Print();
+    } else if (command == "") {
     } else {
       stringstream response;
       response << "Unknown command: " << command << endl;
-      res.push_back(response.str());
+      ECHO(response.str());
     }
   }
-
-  return res;
 }
-
-#define TEST
 
 #ifdef TEST
-
-bool starts_with(const string &who, const string &what) {
-  if (who.length() <= what.length())
-    return false;
-  return who.find(what) == 0;
-}
-
-template <typename T>
-bool vectors_equal(const vector<T> &v1, const vector<T> &v2) {
-  if (v1.size() != v2.size()) {
-    cout << "Sizes are different" << endl;
-    return false;
-  }
-  for (int i = 0; i < v1.size(); i++) {
-    if (v1[i] != v2[i]) {
-      cout << "At index " << i << " " << v1[i] << " <> " << v2[i] << endl;
-      return false;
-    } else {
-      cout << "At index " << i << " " << v1[i] << " == " << v2[i] << endl;
-    }
-  }
-  return true;
-}
-
 bool test1() {
-  auto res = database({
+  database({
       "Add 0-1-2 event1",
       "Add 1-2-3 event2",
       "Find 0-1-2",
@@ -184,11 +231,31 @@ bool test1() {
       "Event not found",
   };
 
-  return vectors_equal(res, output);
+  for (const auto &item : output) {
+    string str;
+    if (ss.eof()) {
+      cout << "ss ended";
+      return false;
+    }
+    ss >> str;
+    if (str != item) {
+      cout << str << " != " << item << endl;
+      return false;
+    } else {
+      cout << "[" << str << "] == [" << item << "]" << endl;
+    }
+  }
+  if (!ss.eof()) {
+    cout << "ss not ended";
+    return false;
+  }
+  return true;
+
+  // return vectors_equal(res, output);
 }
 
 bool test2() {
-  auto res = database({
+  database({
       "Add 0-13-32 event1",
   });
 
@@ -196,31 +263,27 @@ bool test2() {
       "Month value is invalid: 13",
   };
 
-  return vectors_equal(res, output);
+  // return vectors_equal(res, output);
 }
 
 bool test3() {
-  auto res = database({
+  database({
       "Add 1---1-1 event1",
   });
 
   vector<string> output{
       "Wrong date format: 1---1-1",
   };
-
-  return vectors_equal(res, output);
 }
 
 bool test4() {
-  auto res = database({
+  database({
       "Add 0-11-32 event1",
   });
 
   vector<string> output{
       "Day value is invalid: 32",
   };
-
-  return vectors_equal(res, output);
 }
 #else
 
