@@ -34,11 +34,13 @@ public:
     // cout << "[" << str << "]" << endl;
     stringstream date_stream(str);
 
+    day = -1998;
+
     char def1, def2;
     date_stream >> year >> def1 >> month >> def2 >> day;
 
     if (date_stream.bad() || !date_stream.eof() || (def1 != '-') ||
-        (def2 != '-')) {
+        (def2 != '-') || (day == -1998)) {
       stringstream msg_stream;
       msg_stream << "Wrong date format: " << str;
       throw date_format_exception(msg_stream.str());
@@ -412,14 +414,38 @@ bool test13() {
       "0001-01-01 a",
   });
 }
+
+bool test14() {
+  database({"Add f8-1-1 task",   "Add 9f-1-1 task",
+            "Add 1-11f-1 task",  "Add 1-f12-1 task",
+            "Add 1-1-f13 task!", "Add 1-1-14f task",
+            "Add --15-1-1 task", "Add 1---2-1 task",
+            "Add 1-1---17 task", "Add 1-1- task",
+            "Add 1--1 task",     "Add --111 task",
+            "Add 1---+++1 task", "Add --++1 task",
+            "Add 1-1-f task",    "Add -1 -1 -1 t",
+            "Add 1-0- t",        "Add 1-1-1-1 t",
+            "Del foo",           "Print"});
+
+  return compare({"Wrong date format: f8-1-1", "Wrong date format: 9f-1-1",
+                  "Wrong date format: 1-11f-1", "Wrong date format: 1-f12-1",
+                  "Wrong date format: 1-1-f13", "Wrong date format: 1-1-14f",
+                  "Wrong date format: --15-1-1", "Wrong date format: 1---2-1",
+                  "Wrong date format: 1-1---17", "Wrong date format: 1-1-",
+                  "Wrong date format: 1--1", "Wrong date format: --111",
+                  "Wrong date format: 1---+++1", "Wrong date format: --++1",
+                  "Wrong date format: 1-1-f", "Wrong date format: -1 -1 -1",
+                  "Wrong date format: 1-0-", "Wrong date format: 1-1-1-1",
+                  "Event not found"});
+}
 #else
 
 #endif
 
 int main() {
 #ifdef TEST
-  auto tests = {test1, test2, test3,  test4,  test5,  test6, test7,
-                test8, test9, test10, test11, test12, test13};
+  auto tests = {test1, test2, test3,  test4,  test5,  test6,  test7,
+                test8, test9, test10, test11, test12, test13, test14};
   auto i = 0;
   for (auto test : tests) {
     i++;
