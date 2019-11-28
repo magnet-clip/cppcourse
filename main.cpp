@@ -434,9 +434,9 @@ bool test14() {
                   "Wrong date format: 1-1---17", "Wrong date format: 1-1-",
                   "Wrong date format: 1--1", "Wrong date format: --111",
                   "Wrong date format: 1---+++1", "Wrong date format: --++1",
-                  "Wrong date format: 1-1-f", "Wrong date format: -1 -1 -1",
+                  "Wrong date format: 1-1-f", "Wrong date format: -1",
                   "Wrong date format: 1-0-", "Wrong date format: 1-1-1-1",
-                  "Event not found"});
+                  "Wrong date format: foo"});
 }
 #else
 
@@ -447,14 +447,22 @@ int main() {
   auto tests = {test1, test2, test3,  test4,  test5,  test6,  test7,
                 test8, test9, test10, test11, test12, test13, test14};
   auto i = 0;
+  bool failed = false;
   for (auto test : tests) {
     i++;
     if (!test()) {
       cout << "TEST " << i << " FAILED" << endl;
+      failed = true;
     } else {
       cout << "TEST " << i << " OK" << endl;
     }
     FLUSH();
+  }
+
+  if (failed) {
+    cout << "SOME TESTS FAILED" << endl;
+  } else {
+    cout << "ALL TESTS PASSED" << endl;
   }
 
   return 0;
