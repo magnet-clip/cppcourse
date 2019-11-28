@@ -334,7 +334,6 @@ bool test7() {
   });
 }
 
-// TODO FAILS
 bool test8() {
   database({
       "Add 1-1---1 event1",
@@ -345,7 +344,6 @@ bool test8() {
   });
 }
 
-// TODO FAILS
 bool test9() {
   database({"Add 1-1- event1", "Add 1-12-31 event1"});
 
@@ -359,8 +357,6 @@ bool test10() {
       "Print",
   });
 
-  // TODO not sure this test is completely correct. Should it be no output at
-  // all?
   return compare({
       "",
   });
@@ -372,7 +368,7 @@ bool test11() {
       "Find 1-1-2 b",
   });
 
-  // TODO not sure this test is completely correct. Should it be no output at
+  // TODO not sure this test is copletely correct. Should it be no output at
   // all?
   return compare({
       "",
@@ -391,8 +387,6 @@ bool test12() {
       "Find 1-1-1",
   });
 
-  // TODO not sure this test is completely correct. Should it be no output at
-  // all?
   return compare({
       "0001-01-01 A",
       "0001-01-01 B",
