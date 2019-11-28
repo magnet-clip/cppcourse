@@ -6,11 +6,12 @@
 #include <vector>
 using namespace std;
 
-#define TEST
+//#define TEST
 
 #ifdef TEST
 stringstream ss;
 #define ECHO(str) (ss << (str) << endl)
+#define FLUSH() ss.clear();
 #else
 #define ECHO(str) (cout << (str) << endl)
 #endif
@@ -30,35 +31,16 @@ public:
   Date() : year(0), month(0), day(0) {}
   Date(int year, int month, int day) : year(year), month(month), day(day) {}
   Date(string str) {
-    string raw_year, raw_month, raw_day;
-
+    // cout << "[" << str << "]" << endl;
     stringstream date_stream(str);
 
-    getline(date_stream, raw_year, '-');
-    getline(date_stream, raw_month, '-');
-    getline(date_stream, raw_day);
+    char def1, def2;
+    date_stream >> year >> def1 >> month >> def2 >> day;
 
-    try {
-      year = stoi(raw_year);
-    } catch (invalid_argument) {
+    if (date_stream.bad() || !date_stream.eof() || (def1 != '-') ||
+        (def2 != '-')) {
       stringstream msg_stream;
       msg_stream << "Wrong date format: " << str;
-      throw date_format_exception(msg_stream.str());
-    }
-
-    try {
-      month = stoi(raw_month);
-    } catch (invalid_argument) {
-      stringstream msg_stream;
-      msg_stream << "Wrong date format: " << str;
-      throw date_format_exception(msg_stream.str());
-    }
-
-    try {
-      day = stoi(raw_day);
-    } catch (invalid_argument) {
-      stringstream msg_stream;
-      msg_stream << "Wrong date format: " << str << " [" << raw_day << "]";
       throw date_format_exception(msg_stream.str());
     }
 
@@ -389,14 +371,41 @@ bool test11() {
       "",
   });
 }
+
+bool test12() {
+  database({
+      "Add 1-1-1 C",
+      "Add 1-1-1 A",
+      "Add 1-1-1 B",
+      "Add 1-2-1 task2",
+      "Add 1-1-2 task3",
+      "Add 2-1-1 task1",
+      "Print",
+      "Find 1-1-1",
+  });
+
+  // TODO not sure this test is completely correct. Should it be no output at
+  // all?
+  return compare({
+      "0001-01-01 A",
+      "0001-01-01 B",
+      "0001-01-01 C",
+      "0001-01-02 task3",
+      "0001-02-01 task2",
+      "0002-01-01 task1",
+      "A",
+      "B",
+      "C",
+  });
+}
 #else
 
 #endif
 
 int main() {
 #ifdef TEST
-  auto tests = {test1, test2, test3, test4,  test5, test6,
-                test7, test8, test9, test10, test11};
+  auto tests = {test1, test2, test3, test4,  test5,  test6,
+                test7, test8, test9, test10, test11, test12};
   auto i = 0;
   for (auto test : tests) {
     i++;
@@ -405,6 +414,7 @@ int main() {
     } else {
       cout << "TEST " << i << " OK" << endl;
     }
+    FLUSH();
   }
 
   return 0;
