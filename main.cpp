@@ -6,7 +6,7 @@
 #include <vector>
 using namespace std;
 
-//#define TEST
+#define TEST
 
 #ifdef TEST
 stringstream ss;
@@ -93,12 +93,17 @@ public:
 
   bool DeleteEvent(const Date &date, const string &event) {
     if (data.count(date)) {
-      ECHO("Deleted successfully");
-      data[date].erase(event);
-      if (data[date].size() == 0) {
-        data.erase(date);
+      if (data[date].count(event)) {
+        ECHO("Deleted successfully");
+        data[date].erase(event);
+        if (data[date].size() == 0) {
+          data.erase(date);
+        }
+        return true;
+      } else {
+        ECHO("Event not found");
+        return false;
       }
-      return true;
     } else {
       ECHO("Event not found");
       return false;
@@ -398,14 +403,23 @@ bool test12() {
       "C",
   });
 }
+
+bool test13() {
+  database({"Add 1-1-1 a", "Del 1-1-1 a1", "Print"});
+
+  return compare({
+      "Event not found",
+      "0001-01-01 a",
+  });
+}
 #else
 
 #endif
 
 int main() {
 #ifdef TEST
-  auto tests = {test1, test2, test3, test4,  test5,  test6,
-                test7, test8, test9, test10, test11, test12};
+  auto tests = {test1, test2, test3,  test4,  test5,  test6, test7,
+                test8, test9, test10, test11, test12, test13};
   auto i = 0;
   for (auto test : tests) {
     i++;
