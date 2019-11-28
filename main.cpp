@@ -305,32 +305,108 @@ bool test4() {
       "Day value is invalid: 32",
   });
 }
+
+bool test5() {
+  database({
+      "Add 1*1*1 t",
+      "Print",
+  });
+
+  return compare({
+      "Wrong date format: 1*1*1",
+  });
+}
+
+bool test6() {
+  Date d1(102, 1, 12);
+  Date d2(1002, 1, 1);
+
+  return d1 < d2;
+}
+
+bool test7() {
+  database({
+      "Add 102-1-12 dd",
+      "Add 1002-1-1 dddd",
+      "Add 102-1-12 vvv",
+      "Add 103-2-1 wwwwwww",
+      "Add 103-2-1 rrrr333",
+      "Add 103-2-1 aaa223",
+      "Print",
+  });
+
+  return compare({
+      "0102-01-12 dd",
+      "0102-01-12 vvv",
+      "0103-02-01 aaa223",
+      "0103-02-01 rrrr333",
+      "0103-02-01 wwwwwww",
+      "1002-01-01 dddd",
+  });
+}
+
+// TODO FAILS
+bool test8() {
+  database({
+      "Add 1-1---1 event1",
+  });
+
+  return compare({
+      "Wrong date format: 1-1---1",
+  });
+}
+
+// TODO FAILS
+bool test9() {
+  database({"Add 1-1- event1", "Add 1-12-31 event1"});
+
+  return compare({
+      "Wrong date format: 1-1-",
+  });
+}
+
+bool test10() {
+  database({
+      "Print",
+  });
+
+  // TODO not sure this test is completely correct. Should it be no output at
+  // all?
+  return compare({
+      "",
+  });
+}
+
+bool test11() {
+  database({
+      "Add 1-1-1 a",
+      "Find 1-1-2 b",
+  });
+
+  // TODO not sure this test is completely correct. Should it be no output at
+  // all?
+  return compare({
+      "",
+  });
+}
 #else
 
 #endif
 
 int main() {
 #ifdef TEST
-  if (!test1()) {
-    cout << "TEST 1 FAILED" << endl;
-  } else {
-    cout << "TEST 1 OK" << endl;
+  auto tests = {test1, test2, test3, test4,  test5, test6,
+                test7, test8, test9, test10, test11};
+  auto i = 0;
+  for (auto test : tests) {
+    i++;
+    if (!test()) {
+      cout << "TEST " << i << " FAILED" << endl;
+    } else {
+      cout << "TEST " << i << " OK" << endl;
+    }
   }
-  if (!test2()) {
-    cout << "TEST 2 FAILED" << endl;
-  } else {
-    cout << "TEST 2 OK" << endl;
-  }
-  if (!test3()) {
-    cout << "TEST 3 FAILED" << endl;
-  } else {
-    cout << "TEST 3 OK" << endl;
-  }
-  if (!test4()) {
-    cout << "TEST 4 FAILED" << endl;
-  } else {
-    cout << "TEST 4 OK" << endl;
-  }
+
   return 0;
 
 #else
